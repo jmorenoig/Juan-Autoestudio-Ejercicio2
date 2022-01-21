@@ -22,6 +22,13 @@ pipeline{
                         sh "dotnet build"
                     }
                 }
+            } 
+            stage ('Test') {
+                steps {
+                    dir("TestProject"){
+                        sh "dotnet test"
+                    }
+                }
             }      
         }
 }
