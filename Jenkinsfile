@@ -11,14 +11,14 @@ pipeline{
         
             stage ('Restore') {
                 steps {
-                    dir("**/*.csproj"){
+                    dir("CapaPresentacion"){
                         sh "dotnet restore"
                     }
                 }
             }
             stage ('Build') {
                 steps {
-                    dir("**/*.csproj"){
+                    dir("CapaPresentacion"){
                         sh "dotnet build"
                     }
                 }
