@@ -16,10 +16,10 @@ pipeline{
                     }
                 }
             }
-            stage ('Restore') {
+            stage ('Build') {
                 steps {
                     dir("**/*.csproj"){
-                        sh "dotnet restore"
+                        sh "dotnet build"
                     }
                 }
             }      
