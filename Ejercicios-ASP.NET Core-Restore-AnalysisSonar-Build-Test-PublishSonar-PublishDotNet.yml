@@ -1,0 +1,85 @@
+variables:
+- name: BuildParameters.RestoreBuildProjects
+  value: '**/*.csproj'
+name: $(date:yyyyMMdd)$(rev:.r)
+jobs:
+- job: Job_1
+  displayName: Agent job 1
+  pool:
+    name: juan_local_pool
+  steps:
+  - checkout: self
+  - task: SonarQubePrepare@5
+    displayName: Prepare analysis on SonarQube
+    inputs:
+      SonarQube: b0c1b04d-1dd4-40c8-9d1c-b74186ab0ed7
+      scannerMode: CLI
+      configMode: manual
+      cliProjectKey: net-core-juan
+      projectKey: net-core-juan
+      cliProjectName: net-core-juan
+      projectName: net-core-juan
+      extraProperties: >-
+        sonar.language=cs
+
+        sonar.verbose=true
+
+        sonar.sourceEncoding=UTF-8
+
+        sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
+
+        sonar.cs.vstest.reportsPaths=**/*.trx
+  - task: sonar branch 2@1
+    displayName: branch
+  - task: PowerShell@2
+    displayName: Install  packages Windows
+    inputs:
+      targetType: inline
+      script: >-
+        dotnet tool install --global dotnet-sonarscanner  --version 4.8.0
+
+        dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.0.0
+  - task: DotNetCoreCLI@2
+    displayName: Restore
+    inputs:
+      command: restore
+      projects: $(BuildParameters.RestoreBuildProjects)
+  - task: DotNetCoreCLI@2
+    displayName: Build
+    inputs:
+      projects: $(BuildParameters.RestoreBuildProjects)
+      arguments: --configuration $(BuildConfiguration)
+  - task: DotNetCoreCLI@2
+    displayName: Test
+    inputs:
+      command: test
+      projects: '**/TestProject/*.csproj'
+      arguments: '--configuration $(BuildConfiguration) --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=$(Build.SourcesDirectory)/TestResults/  '
+  - task: dependency-check-build-task@6
+    displayName: Dependency Check
+    inputs:
+      projectName: net-core-juan
+      scanPath: '**/*.csproj'
+      format: ALL
+  - task: PowerShell@2
+    displayName: Convert reportgenerator file Windows
+    inputs:
+      targetType: inline
+      script: reportgenerator -reports:TestResults/coverage.opencover.xml -targetdir:TestResults/Reports/ -reportTypes:"HTMLInline;Cobertura"
+  - task: SonarQubeAnalyze@5
+    displayName: Run Code Analysis
+  - task: SonarQubePublish@5
+    displayName: Publish Quality Gate Result
+  - task: DotNetCoreCLI@2
+    displayName: dotnet publish
+    inputs:
+      command: publish
+      publishWebProjects: false
+      projects: '**/*.csproj'
+      arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory) '
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Artifact
+    condition: succeededOrFailed()
+    inputs:
+      TargetPath: '\\my\share\$(Build.DefinitionName)\$(Build.BuildNumber)'
+...
