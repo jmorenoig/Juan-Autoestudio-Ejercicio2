@@ -11,14 +11,14 @@ pipeline{
         
             stage ('Restore') {
                 steps {
-                    dir("CapaPresentacion"){
+                    dir("CapaDatos"){
                         sh "dotnet restore"
                     }
                 }
             }
             stage ('Build') {
                 steps {
-                    dir("CapaPresentacion"){
+                    dir("CapaDatos"){
                         sh "dotnet build"
                     }
                 }
