@@ -1,6 +1,12 @@
 pipeline{
-    agent any
+    agent {label 'AgentLinux-21841f69'}
         stages {
+            stage ('Liquibase') {
+                steps {
+                    sh "liquibase -v"
+                    
+                }
+            }
             stage ('install .Net') {
                 steps {
                     sh "dotnet tool install --global dotnet-sonarscanner | true"
